@@ -11,7 +11,7 @@ from aiogram.filters import StateFilter, Command
 from db import DB
 from fsm.fsm import FSMFinishShift
 from lexicon.lexicon_ru import LEXICON_RU
-from keyboards.keyboards import create_cancel_kb, create_places_kb
+from keyboards.keyboards import create_cancel_kb, create_places_kb, create_yes_no_kb
 from middleware.album_middleware import AlbumsMiddleware
 from config.config import place_chat, config
 
@@ -27,6 +27,7 @@ async def report(dictionary: dict, date, user_id: Union[str, int]) -> str:
            f"Дата: {date}\n" \
            f"Точка: {dictionary['place']}\n" \
            f"Имя: {DB.get_current_name(user_id)}\n" \
+           f"Льготники: {dictionary['beneficiaries']}\n" \
            f"Общая выручка: {dictionary['summary']}\n" \
            f"Наличные: {dictionary['cash']}\n" \
            f"Безнал: {dictionary['online_cash']}\n" \
@@ -194,10 +195,10 @@ async def process_summary_command(message: Message, state: FSMContext):
 
     await state.update_data(summary=str(Decimal(money_message)))
     await message.answer(
-        text="Введите сумму наличных за сегодня",
-        reply_markup=await create_cancel_kb(),
+        text="Были ли льготники сегодня?",
+        reply_markup=await create_yes_no_kb(),
     )
-    await state.set_state(FSMFinishShift.cash)
+    await state.set_state(FSMFinishShift.beneficiaries)
 
 
 @router_finish.message(StateFilter(FSMFinishShift.summary))
@@ -206,6 +207,56 @@ async def warning_summary_command(message: Message):
         text="Напишите общую выручку за сегодня",
         reply_markup=await create_cancel_kb(),
     )
+
+
+@router_finish.callback_query(StateFilter(FSMFinishShift.beneficiaries), F.data == "yes")
+async def process_beneficiaries_yes_command(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(beneficiaries="yes")
+    await callback.message.answer(
+        text="Прикрепите подтвреждающее фото (справка, паспорт родителей)",
+        reply_markup=await create_cancel_kb(),
+    )
+    await callback.answer(text="✅")
+    await state.set_state(FSMFinishShift.photo_of_beneficiaries)
+
+
+@router_finish.callback_query(StateFilter(FSMFinishShift.beneficiaries), F.data == "no")
+async def process_beneficiaries_no_command(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(beneficiaries="no")
+    await callback.message.answer(
+        text="Напишите сумму наличных за сегодня",
+        reply_markup=await create_cancel_kb(),
+    )
+    await callback.answer(text="✅")
+    await state.set_state(FSMFinishShift.cash)
+
+
+@router_finish.callback_query(StateFilter(FSMFinishShift.beneficiaries), F.data == "cancel")
+async def process_beneficiaries_cancel_command(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.message.answer(
+        text="Вы вернулись в главное меню",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await callback.answer(text="✅")
+
+
+@router_finish.message(StateFilter(FSMFinishShift.photo_of_beneficiaries))
+async def process_photo_beneficiaries_command(message: Message, state: FSMContext):
+    if message.photo:
+        if "photo_beneficiaries" not in await state.get_data():
+            await state.update_data(photo_of_beneficiaries=[message.photo[-1].file_id])
+
+        await message.answer(
+            text="Напишите сумму наличных за сегодня",
+            reply_markup=await create_cancel_kb(),
+        )
+        await state.set_state(FSMFinishShift.cash)
+    else:
+        await message.answer(
+            text="Прикрепите подтвреждающее фото (справка, паспорт родителей)",
+            reply_markup=await create_cancel_kb(),
+        )
 
 
 @router_finish.message(StateFilter(FSMFinishShift.cash), F.text)
@@ -329,7 +380,7 @@ async def warning_encashment_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.total_hours), F.text)
+@router_finish.message(StateFilter(FSMFinishShift.total_hours), F.text.isdigit())
 async def process_total_hours_command(message: Message, state: FSMContext):
     await state.update_data(total_hours=message.text)
     await message.answer(
@@ -347,7 +398,7 @@ async def warning_total_hours_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.total_children), F.text)
+@router_finish.message(StateFilter(FSMFinishShift.total_children), F.text.isdigit())
 async def process_total_child_command(message: Message, state: FSMContext):
     await state.update_data(total_children=message.text)
     await message.answer(
@@ -365,7 +416,7 @@ async def warning_total_child_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.total_tokens), F.text)
+@router_finish.message(StateFilter(FSMFinishShift.total_tokens), F.text.isdigit())
 async def process_total_tokens_command(message: Message, state: FSMContext):
     await state.update_data(total_tokens=message.text)
     await message.answer(
@@ -383,7 +434,7 @@ async def warning_total_tokens_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.remaining_tokens), F.text)
+@router_finish.message(StateFilter(FSMFinishShift.remaining_tokens), F.text.isdigit())
 async def process_remaining_token_command(message: Message, state: FSMContext):
     await state.update_data(remaining_token=message.text)
     await message.answer(
@@ -401,7 +452,7 @@ async def warning_remaining_tokens_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.count_cars_5), F.text)
+@router_finish.message(StateFilter(FSMFinishShift.count_cars_5), F.text.isdigit())
 async def process_cars_5_command(message: Message, state: FSMContext):
     await state.update_data(count_cars_5=message.text)
     await message.answer(
@@ -419,7 +470,7 @@ async def warning_cars_5_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.count_cars_10), F.text)
+@router_finish.message(StateFilter(FSMFinishShift.count_cars_10), F.text.isdigit())
 async def process_cars_10_command(message: Message, state: FSMContext):
     await state.update_data(count_cars_10=message.text)
     await message.answer(
@@ -437,7 +488,7 @@ async def warning_cars_10_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.count_carousel), F.text)
+@router_finish.message(StateFilter(FSMFinishShift.count_carousel), F.text.isdigit())
 async def process_carousel_command(message: Message, state: FSMContext):
     await state.update_data(count_carousel=message.text)
     await message.answer(
@@ -455,11 +506,11 @@ async def warning_carousel_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.count_master), F.text)
+@router_finish.message(StateFilter(FSMFinishShift.count_master), F.text.isdigit())
 async def process_master_class_command(message: Message, state: FSMContext):
     await state.update_data(count_master=message.text)
     await message.answer(
-        text="Напишите общее количество продаж доп.товара за день\n(шарики,слаймы и т.д)",
+        text="Напишите общее количество продаж доп.товара за день\n(шарики, слаймы и т.д)",
         reply_markup=await create_cancel_kb(),
     )
     await state.set_state(FSMFinishShift.count_additional)
@@ -473,21 +524,41 @@ async def warning_master_class_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.count_additional), F.text)
+@router_finish.message(StateFilter(FSMFinishShift.count_additional), F.text.isdigit())
 async def process_count_additional_command(message: Message, state: FSMContext):
     await state.update_data(count_additional=message.text)
     await message.answer(
-        text="Сфотографируйте тетрадь (остатки товара на складе)",
+        text="Прикрепите чеки и необходимые фотографии за смену "
+             "(чеки о закрытии смены, оплата QR-кода, чек расхода)",
         reply_markup=await create_cancel_kb(),
     )
-    await state.set_state(FSMFinishShift.photo_copybook)
+    await state.set_state(FSMFinishShift.necessary_photos)
 
 
 @router_finish.message(StateFilter(FSMFinishShift.count_additional))
 async def warning_count_additional_command(message: Message):
     await message.answer(
-        text="Напишите общее количество продаж доп.товара за день\n(шарики,слаймы и т.д)",
+        text="Напишите общее количество продаж доп.товара за день\n(шарики, слаймы и т.д)",
         reply_markup=await create_cancel_kb(),
+    )
+
+
+@router_finish.message(StateFilter(FSMFinishShift.necessary_photos))
+async def process_necessary_photos_command(message: Message, state: FSMContext):
+    if message.photo:
+        if "necessary_photos" not in await state.get_data():
+            await state.update_data(necessary_photos=[message.photo[-1].file_id])
+
+        await message.answer(
+            text="Сфотографируйте тетрадь (остатки товара на складе)",
+            reply_markup=await create_cancel_kb(),
+        )
+        await state.set_state(FSMFinishShift.photo_copybook)
+    else:
+        await message.answer(
+            text="Прикрепите чеки и необходимые фотографии за смену "
+                 "(чеки о закрытии смены, оплата QR-кода, чек расхода)",
+            reply_markup=await create_cancel_kb(),
     )
 
 
@@ -529,6 +600,12 @@ async def process_object_photo_command(message: Message, state: FSMContext):
                 cash=finish_shift_dict["summary"]
             )
 
+            necessary_photos = [InputMediaPhoto(
+                media=photo_file_id,
+                caption="Необходимые фото за смену (чеки о закрытии смены, оплата QR-кода, "
+                        "чек расхода)",
+            ) for i, photo_file_id in enumerate(finish_shift_dict["necessary_photos"])]
+
             photos_copybook = [InputMediaPhoto(
                 media=photo_file_id,
                 caption="Фото тетради" if i == 0 else ""
@@ -547,6 +624,22 @@ async def process_object_photo_command(message: Message, state: FSMContext):
                     user_id=message.from_user.id,
                 )
             )
+
+            await message.bot.send_media_group(
+                media=necessary_photos,
+                chat_id=place_chat[finish_shift_dict["place"]],
+            )
+
+            if "photo_of_beneficiaries" in finish_shift_dict:
+                photo_of_beneficiaries = [InputMediaPhoto(
+                    media=photo_file_id,
+                    caption="Необходимые фото льготников",
+                ) for i, photo_file_id in enumerate(finish_shift_dict["photo_of_beneficiaries"])]
+
+                await message.bot.send_media_group(
+                    media=photo_of_beneficiaries,
+                    chat_id=place_chat[finish_shift_dict["place"]],
+                )
 
             await message.bot.send_media_group(
                 media=photos_copybook,

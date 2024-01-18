@@ -236,7 +236,6 @@ async def process_attracts_command_no(callback: CallbackQuery, state: FSMContext
     await state.update_data(attracts="no")
 
     check_attractions_dict = await state.get_data()
-    print(check_attractions_dict)
 
     day_of_week = datetime.now(tz=timezone(timedelta(hours=3.0))).strftime('%A')
     date = datetime.now(tz=timezone(timedelta(hours=3.0))).strftime(f'%d/%m/%Y - {LEXICON_RU[day_of_week]}')

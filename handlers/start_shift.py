@@ -8,10 +8,10 @@ from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
 
 from fsm.fsm import FSMStartShift
-from keyboards.keyboards import create_cancel_kb, create_places_kb
+from keyboards.keyboards import create_cancel_kb, create_places_kb, create_agree_kb
 from middleware.album_middleware import AlbumsMiddleware
 from config.config import config, place_chat
-from lexicon.lexicon_ru import LEXICON_RU
+from lexicon.lexicon_ru import LEXICON_RU, rules
 from db import DB
 
 router_start_shift = Router()
@@ -38,110 +38,120 @@ async def process_start_shift_command(message: Message, state: FSMContext):
 async def process_place_1_command(callback: CallbackQuery, state: FSMContext):
     await state.update_data(place="Рязанка комната")
     await callback.message.answer(
-        text="Пожалуйста, пришлите Ваше фото",
-        reply_markup=await create_cancel_kb(),
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
     )
     await callback.answer(text="Рабочая точка успешно записана")
-    await state.set_state(FSMStartShift.my_photo)
+    await state.set_state(FSMStartShift.rules)
 
 
 @router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_ryzanka_square")
 async def process_place_2_command(callback: CallbackQuery, state: FSMContext):
     await state.update_data(place="Рязанка площадка")
     await callback.message.answer(
-        text="Пожалуйста, пришлите Ваше фото",
-        reply_markup=await create_cancel_kb(),
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
     )
     await callback.answer(text="Рабочая точка успешно записана")
-    await state.set_state(FSMStartShift.my_photo)
+    await state.set_state(FSMStartShift.rules)
 
 
 @router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_153_room")
 async def process_place_3_command(callback: CallbackQuery, state: FSMContext):
     await state.update_data(place="Л-153 комната")
     await callback.message.answer(
-        text="Пожалуйста, пришлите Ваше фото",
-        reply_markup=await create_cancel_kb(),
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
     )
     await callback.answer(text="Рабочая точка успешно записана")
-    await state.set_state(FSMStartShift.my_photo)
+    await state.set_state(FSMStartShift.rules)
 
 
 @router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_153_square")
 async def process_place_4_command(callback: CallbackQuery, state: FSMContext):
     await state.update_data(place="Л-153 площадка")
     await callback.message.answer(
-        text="Пожалуйста, пришлите Ваше фото",
-        reply_markup=await create_cancel_kb(),
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
     )
     await callback.answer(text="Рабочая точка успешно записана")
-    await state.set_state(FSMStartShift.my_photo)
+    await state.set_state(FSMStartShift.rules)
 
 
 @router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_cloud_square")
 async def process_place_5_command(callback: CallbackQuery, state: FSMContext):
     await state.update_data(place="Облака площадка")
     await callback.message.answer(
-        text="Пожалуйста, пришлите Ваше фото",
-        reply_markup=await create_cancel_kb(),
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
     )
     await callback.answer(text="Рабочая точка успешно записана")
-    await state.set_state(FSMStartShift.my_photo)
+    await state.set_state(FSMStartShift.rules)
 
 
 @router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_dirt_room")
 async def process_place_6_command(callback: CallbackQuery, state: FSMContext):
     await state.update_data(place="Черная грязь комната")
     await callback.message.answer(
-        text="Пожалуйста, пришлите Ваше фото",
-        reply_markup=await create_cancel_kb(),
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
     )
     await callback.answer(text="Рабочая точка успешно записана")
-    await state.set_state(FSMStartShift.my_photo)
+    await state.set_state(FSMStartShift.rules)
 
 
 @router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_june_square")
 async def process_place_7_command(callback: CallbackQuery, state: FSMContext):
     await state.update_data(place="Июнь площадка")
     await callback.message.answer(
-        text="Пожалуйста, пришлите Ваше фото",
-        reply_markup=await create_cancel_kb(),
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
     )
     await callback.answer(text="Рабочая точка успешно записана")
-    await state.set_state(FSMStartShift.my_photo)
+    await state.set_state(FSMStartShift.rules)
 
 
 @router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_park_kosino")
 async def process_place_8_command(callback: CallbackQuery, state: FSMContext):
     await state.update_data(place="Косино парк площадка")
     await callback.message.answer(
-        text="Пожалуйста, пришлите Ваше фото",
-        reply_markup=await create_cancel_kb(),
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
     )
     await callback.answer(text="Рабочая точка успешно записана")
-    await state.set_state(FSMStartShift.my_photo)
+    await state.set_state(FSMStartShift.rules)
 
 
 @router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_city_kosino")
 async def process_place_9_command(callback: CallbackQuery, state: FSMContext):
     await state.update_data(place="Город Косино карусель+площадка")
     await callback.message.answer(
-        text="Пожалуйста, пришлите Ваше фото",
-        reply_markup=await create_cancel_kb(),
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
     )
     await callback.answer(text="Рабочая точка успешно записана")
-    await state.set_state(FSMStartShift.my_photo)
+    await state.set_state(FSMStartShift.rules)
 
 
 @router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_varskva_room")
 async def process_place_10_command(callback: CallbackQuery, state: FSMContext):
     await state.update_data(place="Варшавский комната")
     await callback.message.answer(
-        text="Пожалуйста, пришлите Ваше фото",
-        reply_markup=await create_cancel_kb(),
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
     )
     await callback.answer(text="Рабочая точка успешно записана")
-    await state.set_state(FSMStartShift.my_photo)
+    await state.set_state(FSMStartShift.rules)
 
 
 @router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "cancel")
@@ -159,6 +169,27 @@ async def warning_start_shift_command(message: Message):
     await message.answer(
         text="Пожалуйста, выберите рабочую точку из списка выше",
         reply_markup=await create_cancel_kb(),
+    )
+
+
+@router_start_shift.callback_query(StateFilter(FSMStartShift.rules), F.data == "agree")
+async def process_rules_command(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer(
+        text="Пожалуйста, сделайте фотографию себя на рабочем месте",
+        reply_markup=await create_cancel_kb(),
+    )
+    await callback.answer(text="Соглашение принято")
+    await state.set_state(FSMStartShift.my_photo)
+
+
+@router_start_shift.message(StateFilter(FSMStartShift.rules))
+async def warning_rules_command(message: Message):
+    await message.answer(
+        text="Вам нужно ознакомиться с правилами выше и нажать кнопку согласия\n\n"
+             'Если Вы хотите выйти из команды, напишите <b>"Отмена"</b>'
+             ' или нажмите <b>кнопку "Отмена"</b> внизу экрана',
+        reply_markup=await create_cancel_kb(),
+        parse_mode="html",
     )
 
 

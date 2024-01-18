@@ -7,6 +7,7 @@ class Authorise(StatesGroup):
 
 class FSMStartShift(StatesGroup):
     place = State()
+    rules = State()
     my_photo = State()
     object_photo = State()
 
@@ -30,6 +31,8 @@ class FSMAttractionsCheck(StatesGroup):
 class FSMFinishShift(StatesGroup):
     place = State()
     summary = State()
+    beneficiaries = State()
+    photo_of_beneficiaries = State()
     cash = State()
     online_cash = State()
     qr_code = State()
@@ -45,6 +48,7 @@ class FSMFinishShift(StatesGroup):
     count_carousel = State()
     count_master = State()
     count_additional = State()
+    necessary_photos = State()
     photo_copybook = State()
     object_photo = State()
 

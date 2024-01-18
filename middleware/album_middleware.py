@@ -80,4 +80,20 @@ class AlbumsMiddleware(BaseMiddleware):
 
             await data["state"].update_data(photo_copybook=[photo.photo[-1].file_id for photo in context.album])
 
+        if str(await data["state"].get_state()).split(":")[-1] == "necessary_photos":
+            for info in context.album:
+                if info.video:
+                    await event.answer(text="Нужны только фото!")
+                    return
+
+            await data["state"].update_data(necessary_photos=[photo.photo[-1].file_id for photo in context.album])
+
+        if str(await data["state"].get_state()).split(":")[-1] == "photo_of_beneficiaries":
+            for info in context.album:
+                if info.video:
+                    await event.answer(text="Нужны только фото!")
+                    return
+
+            await data["state"].update_data(photo_of_beneficiaries=[photo.photo[-1].file_id for photo in context.album])
+
         return await handler(event, data)
