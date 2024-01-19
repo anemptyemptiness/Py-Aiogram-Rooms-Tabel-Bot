@@ -416,7 +416,7 @@ async def warning_total_child_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.total_tokens), F.text.isdigit())
+@router_finish.message(StateFilter(FSMFinishShift.total_tokens), F.text)
 async def process_total_tokens_command(message: Message, state: FSMContext):
     await state.update_data(total_tokens=message.text)
     await message.answer(
@@ -434,7 +434,7 @@ async def warning_total_tokens_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.remaining_tokens), F.text.isdigit())
+@router_finish.message(StateFilter(FSMFinishShift.remaining_tokens), F.text)
 async def process_remaining_token_command(message: Message, state: FSMContext):
     await state.update_data(remaining_token=message.text)
     await message.answer(
@@ -452,7 +452,7 @@ async def warning_remaining_tokens_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.count_cars_5), F.text.isdigit())
+@router_finish.message(StateFilter(FSMFinishShift.count_cars_5), F.text)
 async def process_cars_5_command(message: Message, state: FSMContext):
     await state.update_data(count_cars_5=message.text)
     await message.answer(
@@ -470,7 +470,7 @@ async def warning_cars_5_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.count_cars_10), F.text.isdigit())
+@router_finish.message(StateFilter(FSMFinishShift.count_cars_10), F.text)
 async def process_cars_10_command(message: Message, state: FSMContext):
     await state.update_data(count_cars_10=message.text)
     await message.answer(
@@ -488,7 +488,7 @@ async def warning_cars_10_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.count_carousel), F.text.isdigit())
+@router_finish.message(StateFilter(FSMFinishShift.count_carousel), F.text)
 async def process_carousel_command(message: Message, state: FSMContext):
     await state.update_data(count_carousel=message.text)
     await message.answer(
@@ -506,7 +506,7 @@ async def warning_carousel_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.count_master), F.text.isdigit())
+@router_finish.message(StateFilter(FSMFinishShift.count_master), F.text)
 async def process_master_class_command(message: Message, state: FSMContext):
     await state.update_data(count_master=message.text)
     await message.answer(
@@ -524,7 +524,7 @@ async def warning_master_class_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.count_additional), F.text.isdigit())
+@router_finish.message(StateFilter(FSMFinishShift.count_additional), F.text)
 async def process_count_additional_command(message: Message, state: FSMContext):
     await state.update_data(count_additional=message.text)
     await message.answer(
