@@ -380,7 +380,7 @@ async def warning_encashment_command(message: Message):
     )
 
 
-@router_finish.message(StateFilter(FSMFinishShift.total_hours), F.text.isdigit())
+@router_finish.message(StateFilter(FSMFinishShift.total_hours), F.text)
 async def process_total_hours_command(message: Message, state: FSMContext):
     await state.update_data(total_hours=message.text)
     await message.answer(
