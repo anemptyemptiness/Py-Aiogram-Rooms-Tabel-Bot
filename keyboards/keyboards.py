@@ -100,10 +100,6 @@ async def create_admin_kb() -> InlineKeyboardMarkup:
             callback_data="by_hand",
         )],
         [InlineKeyboardButton(
-            text="Назад",
-            callback_data="back",
-        )],
-        [InlineKeyboardButton(
             text="Выход",
             callback_data="exit",
         )],

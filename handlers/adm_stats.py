@@ -220,24 +220,6 @@ async def warning_get_stats_money_by_hand(message: Message):
 
 @router_adm.callback_query(
     isAdminFilter(config.admins),
-    ~StateFilter(default_state),
-    F.data == "back"
-)
-async def adm_back_command(callback: CallbackQuery, state: FSMContext, bot: Bot):
-    await state.set_state(FSMAdmin.stats)
-    await callback.answer(text="👌🏻")
-    await bot.delete_message(
-        chat_id=callback.message.chat.id,
-        message_id=callback.message.message_id,
-    )
-    await callback.message.answer(
-        text="💵Выберите временной диапазон",
-        reply_markup=await create_admin_kb(),
-    )
-
-
-@router_adm.callback_query(
-    isAdminFilter(config.admins),
     F.data == "exit"
 )
 async def adm_cancel_command(callback: CallbackQuery, state: FSMContext, bot: Bot):
