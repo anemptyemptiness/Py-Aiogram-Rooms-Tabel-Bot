@@ -569,7 +569,7 @@ async def process_photo_copybook_command(message: Message, state: FSMContext):
             await state.update_data(photo_copybook=[message.photo[-1].file_id])
 
         await message.answer(
-            text="Сфотографируйте объект (1 фото)",
+            text="Сфотографируйте комнату (площадку) (1 фото)",
             reply_markup=await create_cancel_kb(),
         )
 
@@ -671,7 +671,7 @@ async def process_object_photo_command(message: Message, state: FSMContext):
             await state.clear()
     else:
         await message.answer(
-            text="Сфотографируйте объект (1 фото)",
+            text="Сфотографируйте комнату (площадку) (1 фото)",
             reply_markup=await create_cancel_kb(),
         )
 

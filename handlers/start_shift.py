@@ -197,7 +197,7 @@ async def warning_rules_command(message: Message):
 async def process_my_photo_command(message: Message, state: FSMContext):
     await state.update_data(my_photo=message.photo[-1].file_id)
     await message.answer(
-        text="Пожалуйста, сфотографируйте объект с 3-х ракурсов\n"
+        text="Пожалуйста, сфотографируйте комнату (площадку) с 3-х ракурсов\n"
              "(соответственно, нужно 3 фотографии)",
         reply_markup=await create_cancel_kb(),
     )
