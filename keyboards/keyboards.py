@@ -62,10 +62,21 @@ async def create_places_kb() -> InlineKeyboardMarkup:
             callback_data="place_varskva_room",
         )],
         [InlineKeyboardButton(
+            text="Город Рязанка Жетоны",
+            callback_data="place_ryazanka_tokens",
+        )],
+        [InlineKeyboardButton(
+            text="Косино Парк Жетоны",
+            callback_data="place_kosino_tokens",
+        )],
+        [InlineKeyboardButton(
+            text="Мякинино",
+            callback_data="place_myakinino",
+        )],
+        [InlineKeyboardButton(
             text="Отмена",
             callback_data="cancel"
-        )
-        ],
+        )],
     ]
 
     return InlineKeyboardMarkup(inline_keyboard=kb)

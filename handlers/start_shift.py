@@ -154,6 +154,42 @@ async def process_place_10_command(callback: CallbackQuery, state: FSMContext):
     await state.set_state(FSMStartShift.rules)
 
 
+@router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_ryazanka_tokens")
+async def process_place_11_command(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(place="Город Рязанка Жетоны")
+    await callback.message.answer(
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
+    )
+    await callback.answer(text="Рабочая точка успешно записана")
+    await state.set_state(FSMStartShift.rules)
+
+
+@router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_kosino_tokens")
+async def process_place_12_command(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(place="Косино Парк Жетоны")
+    await callback.message.answer(
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
+    )
+    await callback.answer(text="Рабочая точка успешно записана")
+    await state.set_state(FSMStartShift.rules)
+
+
+@router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "place_myakinino")
+async def process_place_13_command(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(place="Мякинино")
+    await callback.message.answer(
+        text=f"{rules}",
+        reply_markup=await create_agree_kb(),
+        parse_mode="html",
+    )
+    await callback.answer(text="Рабочая точка успешно записана")
+    await state.set_state(FSMStartShift.rules)
+
+
 @router_start_shift.callback_query(StateFilter(FSMStartShift.place), F.data == "cancel")
 async def process_place_cancel_command(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(
