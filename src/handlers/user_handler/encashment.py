@@ -60,7 +60,12 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
 
         await message.answer(
             text="Отлично, все данные отправлены начальству!",
-            reply_markup=ReplyKeyboardRemove())
+            reply_markup=ReplyKeyboardRemove(),
+        )
+
+        await message.answer(
+            text="Вы вернулись в главное меню",
+        )
 
     except Exception as e:
         logger.exception("Ошибка не с телеграм в encashment.py")

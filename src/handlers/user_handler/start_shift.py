@@ -65,6 +65,11 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
                  "Передаю руководству отчёт...",
             reply_markup=ReplyKeyboardRemove(),
         )
+
+        await message.answer(
+            text="Вы вернулись в главное меню",
+        )
+
     except Exception as e:
         logger.exception("Ошибка не с телеграм в start_shift.py")
         await message.bot.send_message(
