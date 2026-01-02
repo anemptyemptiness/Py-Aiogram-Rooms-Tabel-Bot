@@ -1,5 +1,8 @@
+import asyncio
+from decimal import Decimal
 from datetime import datetime, timezone, timedelta
-
+import logging
+import re
 from typing import Dict, Any, Union
 
 from aiogram import Router, F
@@ -7,7 +10,8 @@ from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, Callbac
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.filters import StateFilter, Command
-from aiogram.exceptions import TelegramAPIError
+from aiogram.exceptions import TelegramAPIError, TelegramNetworkError
+from aiohttp.client_exceptions import ServerDisconnectedError
 
 from src.db.queries.dao.dao import AsyncOrm
 from src.fsm.fsm import FSMFinishShift
@@ -18,13 +22,23 @@ from src.callbacks.place import PlaceCallbackFactory
 from src.config import settings
 from src.db import cached_places
 
-from decimal import Decimal
-import re
-import logging
-
 router_finish = Router()
 router_finish.message.middleware(middleware=AlbumsMiddleware(2))
 logger = logging.getLogger(__name__)
+
+
+async def safe_tg_call(coro, attempts=4):
+    for i in range(attempts):
+        try:
+            return await coro()
+        except (ServerDisconnectedError, TelegramNetworkError) as e:
+            if "disconnected" in str(e).lower() and i < attempts - 1:
+                wait = 2 ** i
+                logger.warning(f"⚠ TG disconnect, retry {i+1}/{attempts} in {wait}s")
+
+                await asyncio.sleep(wait)
+            else:
+                raise
 
 
 async def report(dictionary: Dict[str, Any], date: str, user_id: Union[str, int]) -> str:
@@ -51,16 +65,27 @@ async def report(dictionary: Dict[str, Any], date: str, user_id: Union[str, int]
            f"Количество проданного доп.товара: <em>{dictionary['count_additional']}</em>\n"
 
 
+async def send_report_text(message: Message, data: dict, date: str, chat_id: Union[str, int]):
+    return await message.bot.send_message(
+        chat_id=chat_id,
+        text=await report(
+            dictionary=data,
+            date=date,
+            user_id=message.chat.id,
+        ),
+        parse_mode="html",
+    )
+
+
 async def send_report(message: Message, state: FSMContext, data: dict, date: str, chat_id: Union[str, int]):
     try:
-        await message.bot.send_message(
-            chat_id=chat_id,
-            text=await report(
-                dictionary=data,
+        await safe_tg_call(
+            lambda: send_report_text(
+                message=message,
+                data=data,
                 date=date,
-                user_id=message.chat.id,
+                chat_id=chat_id,
             ),
-            parse_mode="html",
         )
 
         necessary_photos = [
@@ -71,9 +96,11 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
             ) for i, photo_file_id in enumerate(data["necessary_photos"])
         ]
 
-        await message.bot.send_media_group(
-            media=necessary_photos,
-            chat_id=chat_id,
+        await safe_tg_call(
+            lambda: message.bot.send_media_group(
+                media=necessary_photos,
+                chat_id=chat_id,
+            ),
         )
 
         photos_copybook = [
@@ -83,9 +110,11 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
             ) for i, photo_file_id in enumerate(data["photo_copybook"])
         ]
 
-        await message.bot.send_media_group(
-            media=photos_copybook,
-            chat_id=chat_id,
+        await safe_tg_call(
+            lambda: message.bot.send_media_group(
+                media=photos_copybook,
+                chat_id=chat_id,
+            ),
         )
 
         photos_object = [
@@ -95,9 +124,11 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
             ) for i, photo_file_id in enumerate(data["object_photo"])
         ]
 
-        await message.bot.send_media_group(
-            media=photos_object,
-            chat_id=chat_id,
+        await safe_tg_call(
+            lambda: message.bot.send_media_group(
+                media=photos_object,
+                chat_id=chat_id,
+            ),
         )
 
         if "photo_of_beneficiaries" in data:
@@ -108,9 +139,11 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
                 ) for i, photo_file_id in enumerate(data["photo_of_beneficiaries"])
             ]
 
-            await message.bot.send_media_group(
-                media=photo_of_beneficiaries,
-                chat_id=chat_id,
+            await safe_tg_call(
+                lambda: message.bot.send_media_group(
+                    media=photo_of_beneficiaries,
+                    chat_id=chat_id,
+                )
             )
 
         await AsyncOrm.set_data_to_reports(
@@ -129,8 +162,8 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
             text="Вы вернулись в главное меню",
         )
 
-    except Exception as e:
-        logger.exception("Ошибка не с телеграм в finish_shift.py")
+    except TelegramAPIError as e:
+        logger.exception("Ошибка с телеграм в finish_shift.py")
         await message.bot.send_message(
             text=f"Finish shift report error: {e}\n"
                  f"User_id: {message.from_user.id}",
@@ -141,8 +174,8 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
             text="Упс... что-то пошло не так, сообщите руководству!",
             reply_markup=ReplyKeyboardRemove(),
         )
-    except TelegramAPIError as e:
-        logger.exception("Ошибка с телеграм в finish_shift.py")
+    except Exception as e:
+        logger.exception("Ошибка не с телеграм в finish_shift.py")
         await message.bot.send_message(
             text=f"Finish shift report error: {e}\n"
                  f"User_id: {message.from_user.id}",

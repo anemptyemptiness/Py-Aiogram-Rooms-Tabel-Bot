@@ -70,8 +70,8 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
             text="Вы вернулись в главное меню",
         )
 
-    except Exception as e:
-        logger.exception("Ошибка не с телеграм в start_shift.py")
+    except TelegramAPIError as e:
+        logger.exception("Ошибка с телеграм в start_shift.py")
         await message.bot.send_message(
             chat_id=settings.ADMIN_ID,
             text=f"Start shift report error:\n\n{e}",
@@ -81,8 +81,8 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
             text="Упс... что-то пошло не так, сообщите руководству!",
             reply_markup=ReplyKeyboardRemove(),
         )
-    except TelegramAPIError as e:
-        logger.exception("Ошибка с телеграм в start_shift.py")
+    except Exception as e:
+        logger.exception("Ошибка не с телеграм в start_shift.py")
         await message.bot.send_message(
             chat_id=settings.ADMIN_ID,
             text=f"Start shift report error:\n\n{e}",

@@ -1,11 +1,11 @@
-import pprint
-
 from src.config import Settings
 import psycopg2
 import logging
 
 
 class DataBase:
+    connection = None
+
     def __init__(self, settings: Settings) -> None:
         self._user = settings.DB_USER
         self._password = settings.DB_PASS
@@ -13,6 +13,7 @@ class DataBase:
         self._host = settings.DB_HOST
         self._port = settings.DB_PORT
         self._logger = logging.getLogger(__name__)
+        self.connection = self._connect_to_db()
 
     def _connect_to_db(self):
         connect = psycopg2.connect(
@@ -26,8 +27,7 @@ class DataBase:
         return connect
 
     def get_admins_user_ids(self):
-        connect = self._connect_to_db()
-        cursor = connect.cursor()
+        cursor = self.connection.cursor()
 
         try:
             cursor.execute(
@@ -42,11 +42,9 @@ class DataBase:
             self._logger.exception("Ошибка в get_admins_user_ids()")
         finally:
             cursor.close()
-            connect.close()
 
     def get_employees_user_ids(self):
-        connect = self._connect_to_db()
-        cursor = connect.cursor()
+        cursor = self.connection.cursor()
 
         try:
             cursor.execute(
@@ -61,11 +59,9 @@ class DataBase:
             self._logger.exception("Ошибка в get_employees_user_ids()")
         finally:
             cursor.close()
-            connect.close()
 
     def get_places(self):
-        connect = self._connect_to_db()
-        cursor = connect.cursor()
+        cursor = self.connection.cursor()
 
         try:
             cursor.execute(
@@ -79,11 +75,9 @@ class DataBase:
             self._logger.exception("Ошибка в get_places()")
         finally:
             cursor.close()
-            connect.close()
 
     def get_chat_ids(self):
-        connect = self._connect_to_db()
-        cursor = connect.cursor()
+        cursor = self.connection.cursor()
 
         try:
             cursor.execute(
@@ -97,11 +91,9 @@ class DataBase:
             self._logger.exception("Ошибка в get_chat_ids()")
         finally:
             cursor.close()
-            connect.close()
 
     def get_employees_fullname_and_id(self, role: str):
-        connect = self._connect_to_db()
-        cursor = connect.cursor()
+        cursor = self.connection.cursor()
 
         try:
             cursor.execute(
@@ -116,4 +108,3 @@ class DataBase:
             self._logger.exception("Ошибка в get_employees_fullname_and_id()")
         finally:
             cursor.close()
-            connect.close()

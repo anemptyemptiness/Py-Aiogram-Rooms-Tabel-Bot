@@ -54,11 +54,10 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
             text="Вы вернулись в главное меню",
         )
 
-    except Exception as e:
-        logger.exception("Ошибка не с телеграм в check_attractions.py")
+    except TelegramAPIError as e:
+        logger.exception("Ошибка с телеграм в check_attractions.py")
         await message.bot.send_message(
-            text=f"Check attractions report error: {e}\n"
-                 f"User_id: {message.from_user.id}",
+            text=f"Check attractions report error:\n\n{e}",
             chat_id=settings.ADMIN_ID,
             reply_markup=ReplyKeyboardRemove(),
         )
@@ -66,10 +65,11 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
             text="Упс... что-то пошло не так, сообщите руководству!",
             reply_markup=ReplyKeyboardRemove(),
         )
-    except TelegramAPIError as e:
-        logger.exception("Ошибка с телеграм в check_attractions.py")
+    except Exception as e:
+        logger.exception("Ошибка не с телеграм в check_attractions.py")
         await message.bot.send_message(
-            text=f"Check attractions report error:\n\n{e}",
+            text=f"Check attractions report error: {e}\n"
+                 f"User_id: {message.from_user.id}",
             chat_id=settings.ADMIN_ID,
             reply_markup=ReplyKeyboardRemove(),
         )

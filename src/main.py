@@ -5,9 +5,11 @@ from threading import Thread
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.client.session.aiohttp import AiohttpSession
+from aiohttp import ClientTimeout
 
 from src.config import settings, redis
-from menu_commands import set_default_commands
+from src.menu_commands import set_default_commands
 from src.handlers import (
     router_authorise,
     router_attractions,
@@ -20,7 +22,9 @@ from src.autoposting.check_for_revenue import creating_new_loop_for_checking_rev
 
 
 async def main() -> None:
-    bot = Bot(token=settings.TOKEN)
+    session = AiohttpSession(timeout=settings.HTTP_TIMEOUT)
+
+    bot = Bot(token=settings.TOKEN, session=session)
     storage = RedisStorage(redis=redis)
     dp = Dispatcher(storage=storage)
 
