@@ -4,9 +4,10 @@ import sys
 from threading import Thread
 
 from aiogram import Bot, Dispatcher
+from aiogram.exceptions import TelegramNetworkError, TelegramAPIError
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.client.session.aiohttp import AiohttpSession
-from aiohttp import ClientTimeout
+from aiohttp import TCPConnector
 
 from src.config import settings, redis
 from src.menu_commands import set_default_commands
@@ -52,9 +53,22 @@ async def main() -> None:
     auto_checking_revenue_thread = Thread(target=creating_new_loop_for_checking_revenue, args=(global_loop, bot))
     auto_checking_revenue_thread.start()
 
-    print("Бот успешно запущен!", file=sys.stderr)
-    await dp.start_polling(bot)
+    while True:
+        try:
+            print("Бот успешно запущен!")
+            await dp.start_polling(bot)
+        except (TelegramNetworkError, TelegramAPIError) as tne:
+            await bot.send_message(settings.ADMIN_ID, f"Ошибка от Телеграм: {tne}. Reconnecting...")
+            await asyncio.sleep(5)
+        except Exception as e:
+            await bot.send_message(settings.ADMIN_ID, f"Иная ошибка Exception: {e}. Reconnecting...")
+            await asyncio.sleep(5)
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt as ki:
+        print("Бот успешно остановлен!")
+    except Exception as e:
+        print(f"Ошибка: {e}")

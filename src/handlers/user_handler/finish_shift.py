@@ -1,4 +1,3 @@
-import asyncio
 from decimal import Decimal
 from datetime import datetime, timezone, timedelta
 import logging
@@ -10,11 +9,11 @@ from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, Callbac
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.filters import StateFilter, Command
-from aiogram.exceptions import TelegramAPIError, TelegramNetworkError
-from aiohttp.client_exceptions import ServerDisconnectedError
+from aiogram.exceptions import TelegramAPIError
 
 from src.db.queries.dao.dao import AsyncOrm
 from src.fsm.fsm import FSMFinishShift
+from src.handlers.user_handler.common import safe_tg_call
 from src.lexicon.lexicon_ru import LEXICON_RU
 from src.keyboards.keyboard import create_cancel_kb, create_places_kb, create_yes_no_kb
 from src.middleware.album_middleware import AlbumsMiddleware
@@ -25,20 +24,6 @@ from src.db import cached_places
 router_finish = Router()
 router_finish.message.middleware(middleware=AlbumsMiddleware(2))
 logger = logging.getLogger(__name__)
-
-
-async def safe_tg_call(coro, attempts=4):
-    for i in range(attempts):
-        try:
-            return await coro()
-        except (ServerDisconnectedError, TelegramNetworkError) as e:
-            if "disconnected" in str(e).lower() and i < attempts - 1:
-                wait = 2 ** i
-                logger.warning(f"⚠ TG disconnect, retry {i+1}/{attempts} in {wait}s")
-
-                await asyncio.sleep(wait)
-            else:
-                raise
 
 
 async def report(dictionary: Dict[str, Any], date: str, user_id: Union[str, int]) -> str:

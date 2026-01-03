@@ -1,5 +1,6 @@
-from typing import Dict, Union, Any
 from datetime import datetime, timezone, timedelta
+import logging
+from typing import Dict, Union, Any
 
 from aiogram import Router, F
 from aiogram.types import Message, ReplyKeyboardRemove, InputMediaPhoto, CallbackQuery
@@ -10,13 +11,13 @@ from aiogram.exceptions import TelegramAPIError
 
 from src.db.queries.dao.dao import AsyncOrm
 from src.fsm.fsm import FSMStartShift
+from src.handlers.user_handler.common import safe_tg_call
 from src.keyboards.keyboard import create_cancel_kb, create_places_kb, create_rules_kb
 from src.callbacks.place import PlaceCallbackFactory
 from src.middleware.album_middleware import AlbumsMiddleware
 from src.config import settings
 from src.lexicon.lexicon_ru import LEXICON_RU, rules
 from src.db import cached_places
-import logging
 
 router_start_shift = Router()
 router_start_shift.message.middleware(middleware=AlbumsMiddleware(2))
@@ -30,22 +31,35 @@ async def report(dictionary: Dict[str, Any], date: str, user_id: Union[str, int]
            f"Имя: {await AsyncOrm.get_current_name(user_id=user_id)}\n"
 
 
+async def send_report_text(message: Message, data: dict, date: str, chat_id: Union[str, int]):
+    return await message.bot.send_message(
+        chat_id=chat_id,
+        text=await report(
+            dictionary=data,
+            date=date,
+            user_id=message.chat.id,
+        ),
+        parse_mode="html",
+    )
+
+
 async def send_report(message: Message, state: FSMContext, data: dict, date: str, chat_id: Union[str, int]):
     try:
-        await message.bot.send_message(
-            chat_id=chat_id,
-            text=await report(
-                dictionary=data,
+        await safe_tg_call(
+            lambda: send_report_text(
+                message=message,
+                data=data,
                 date=date,
-                user_id=message.chat.id,
+                chat_id=chat_id,
             ),
-            parse_mode="html",
         )
 
-        await message.bot.send_photo(
-            chat_id=chat_id,
-            photo=data['my_photo'],
-            caption='Фото сотрудника',
+        await safe_tg_call(
+            lambda: message.bot.send_photo(
+                chat_id=chat_id,
+                photo=data['my_photo'],
+                caption='Фото сотрудника',
+            ),
         )
 
         object_photos = [
@@ -55,9 +69,11 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
             ) for i, photo_file_id in enumerate(data['object_photo'])
         ]
 
-        await message.bot.send_media_group(
-            chat_id=chat_id,
-            media=object_photos,
+        await safe_tg_call(
+            lambda: message.bot.send_media_group(
+                chat_id=chat_id,
+                media=object_photos,
+            ),
         )
 
         await message.answer(

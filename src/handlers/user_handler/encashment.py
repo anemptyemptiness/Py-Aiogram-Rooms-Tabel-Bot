@@ -13,6 +13,7 @@ from src.callbacks.place import PlaceCallbackFactory
 from src.config import settings
 from src.db.queries.dao.dao import AsyncOrm
 from src.fsm.fsm import FSMEncashment
+from src.handlers.user_handler.common import safe_tg_call
 from src.lexicon.lexicon_ru import LEXICON_RU
 from src.keyboards.keyboard import create_cancel_kb, create_places_kb, create_yes_no_kb
 from src.middleware.album_middleware import AlbumsMiddleware
@@ -33,16 +34,27 @@ async def report(dictionary: Dict[str, Any], date: str, user_id: Union[str, int]
            f"Сумма инкассации: <em>{dictionary['summary'] if 'summary' in dictionary else 'None'}</em>\n"
 
 
+async def send_report_text(message: Message, data: dict, date: str, chat_id: Union[str, int]):
+    return await message.bot.send_message(
+        chat_id=chat_id,
+        text=await report(
+            dictionary=data,
+            date=date,
+            user_id=message.chat.id,
+        ),
+        parse_mode="html",
+    )
+
+
 async def send_report(message: Message, state: FSMContext, data: dict, date: str, chat_id: Union[str, int]):
     try:
-        await message.bot.send_message(
-            chat_id=chat_id,
-            text=await report(
-                dictionary=data,
+        await safe_tg_call(
+            lambda: send_report_text(
+                message=message,
+                data=data,
                 date=date,
-                user_id=message.chat.id,
+                chat_id=chat_id,
             ),
-            parse_mode="html",
         )
 
         if 'photo_of_check' in data:
@@ -53,9 +65,11 @@ async def send_report(message: Message, state: FSMContext, data: dict, date: str
                 ) for i, photo_file_id in enumerate(data['photo_of_check'])
             ]
 
-            await message.bot.send_media_group(
-                chat_id=chat_id,
-                media=media_check,
+            await safe_tg_call(
+                lambda: message.bot.send_media_group(
+                    chat_id=chat_id,
+                    media=media_check,
+                ),
             )
 
         await message.answer(
